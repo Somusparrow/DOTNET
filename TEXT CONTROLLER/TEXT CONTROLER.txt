@@ -1,0 +1,152 @@
+TEST CONTROLLER
+
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Data.SqlClient;
+using System.Xml.Linq;
+using Task1.Model;
+
+namespace Task1.Controllers
+{
+    public class TestController : Controller
+    {
+        [HttpGet]
+        [Route("Test/getEmp")]
+        public JsonResult getEmp()
+        {
+            return Json(new {x=new { Id = 100, Name = "Bala", Age = 25, Place = "coimbatore" } });
+        }
+
+        [HttpGet]
+        [Route("Test/EmpList")]
+        public JsonResult EmpList()
+        {
+            List< Employee > employees = new List< Employee >();
+            employees.Add(new Employee { Id = 100, Name = "Bala", Age = 25, Place = "coimbatore" });
+            employees.Add(new Employee { Id = 100, Name = "Bala", Age = 25, Place = "coimbatore" });
+            employees.Add(new Employee { Id = 100, Name = "Bala", Age = 25, Place = "coimbatore" });
+            employees.Add(new Employee { Id = 100, Name = "Bala", Age = 25, Place = "coimbatore" });
+
+            return Json(new {employees });
+        }
+
+        [HttpGet]
+        [Route("Test/List2")]
+        public JsonResult List2()
+        {
+            List<A> list2= new List<A>();
+            list2.Add(new A { Id = 101, Name = "Suman", Designation = "Developer" });
+            list2.Add(new A { Id = 101, Name = "Suman", Designation = "Developer" });
+            list2.Add(new A { Id = 101, Name = "Suman", Designation = "Developer" });
+            return Json(new { list1 = new { Id = 100, Name = "Bala", Age = 25, Place = "coimbatore", list2 } });
+        
+        }
+
+        [HttpGet]
+        [Route("Test/getEmpSQL")]
+        public JsonResult getEmpSQL()
+        {
+            List<Employee> list3=new List<Employee>();
+            string conString = "Data Source=System6\\SQLEXPRESS; Initial Catalog= DB1; Integrated Security=True; Trust Server Certificate=True";
+            SqlConnection con = new SqlConnection(conString);
+            con.Open();
+            string query = "select * from t1";
+            SqlCommand cmd=new SqlCommand(query, con);
+            SqlDataReader reader=cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                list3.Add(new Employee
+                {
+                    Id = (int)reader["id"],
+                    Name = (string)reader["name"],
+                    Age = (int)reader["age"],
+                    Place = (string)reader["place"]
+
+                });
+            }
+            con.Close();
+            return Json(new { list3 });
+        }
+
+        [HttpGet]
+        [Route("Test/getEmpParam")]
+        public JsonResult getEmpParam(int id, string name)
+        {
+            List<Employee> list3 = new List<Employee>();
+            string conString = "Data Source=System6\\SQLEXPRESS; Initial Catalog= DB1; Integrated Security=True; Trust Server Certificate=True";
+            SqlConnection con = new SqlConnection(conString);
+            con.Open();
+            string query = "select * from t1 where id=" + id;
+            SqlCommand cmd = new SqlCommand(query, con);
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                list3.Add(new Employee
+                {
+                    Id = (int)reader["id"],
+                    Name = (string)reader["name"],
+                    Age = (int)reader["age"],
+                    Place = (string)reader["place"]
+
+                });
+            }
+            con.Close();
+            return Json(new { list3 });
+        }
+
+
+        [HttpGet]
+        [Route("Test/getEmpSP")]
+        public JsonResult getEmpSP(string name)
+        {
+            List<Employee> list4 = new List<Employee>();
+            string conString = "Data Source=System6\\SQLEXPRESS; Initial Catalog= DB1; Integrated Security=True; Trust Server Certificate=True";
+            SqlConnection con = new SqlConnection(conString);
+            con.Open();
+           // string query = "select * from t1 where id=" + id;
+            SqlCommand cmd = new SqlCommand("adduser", con);
+            cmd.CommandType=System.Data.CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@name", name);
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                list4.Add(new Employee
+                {
+                    Id = (int)reader["id"],
+                    Name = (string)reader["name"],
+                    Age = (int)reader["age"],
+                    Place = (string)reader["place"]
+
+                });
+            }
+            con.Close();
+            return Json(new { list4 });
+        }
+
+        [HttpPost]
+        [Route("Test/insertData")]
+        public JsonResult insertData([FromBody] Employee E)
+        {
+         //   List<Employee> list4 = new List<Employee>();
+            string conString = "Data Source=System6\\SQLEXPRESS; Initial Catalog= DB1; Integrated Security=True; Trust Server Certificate=True";
+            SqlConnection con = new SqlConnection(conString);
+            con.Open();
+            // string query = "select * from t1 where id=" + id;
+            SqlCommand cmd = new SqlCommand("insertuser", con);
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@id", E.Id);
+            cmd.Parameters.AddWithValue("@name", E.Name);
+            cmd.Parameters.AddWithValue("@age", E.Age);
+            cmd.Parameters.AddWithValue("@place", E.Place);
+
+            string status = cmd.ExecuteScalar().ToString();
+  
+            if (status != "success")
+                return Json(new { Success=true});
+            else
+            {
+                return Json(new {Success=false });
+            }
+        }
+    }
+}
